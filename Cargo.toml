@@ -10,7 +10,7 @@ repository = "https://github.com/maidsafe/maidsafe_utilities"
 version = "0.4.0"
 
 [dependencies]
-bincode = "~0.4.1"
+rmp-serialize = "~0.7.0"
 clippy = {version = "~0.0.45", optional = true}
 env_logger = "~0.3.2"
 log = "~0.3.5"

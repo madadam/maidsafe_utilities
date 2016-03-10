@@ -43,7 +43,7 @@
 #![cfg_attr(feature="clippy", deny(clippy, clippy_pedantic))]
 #![cfg_attr(feature="clippy", allow(use_debug))]
 
-extern crate bincode;
+extern crate rmp_serialize;
 extern crate env_logger;
 extern crate rustc_serialize;
 extern crate time;

@@ -15,10 +15,8 @@
 // Please review the Licences for the specific language governing permissions and limitations
 // relating to use of the SAFE Network Software.
 
-use bincode::SizeLimit;
-use bincode::rustc_serialize::{decode_from, DecodingError, encode,
-                               encode_into, EncodingError};
-use rustc_serialize::{Encodable, Decodable};
+use rmp_serialize::{decode, Decoder, encode, Encoder};
+use rustc_serialize::{Decodable, Encodable};
 use std::io::{Read, Write, Cursor};
 
 quick_error! {
@@ -26,7 +24,7 @@ quick_error! {
     #[derive(Debug)]
     pub enum SerialisationError {
         /// Error during serialisation (encoding).
-        Serialise(err: EncodingError) {
+        Serialise(err: encode::Error) {
             description("Serialise error")
             display("Serialise error: {}", err)
             cause(err)
@@ -34,7 +32,7 @@ quick_error! {
         }
 
         /// Error during deserialisation (decoding).
-        Deserialise(err: DecodingError) {
+        Deserialise(err: decode::Error) {
             description("Deserialise error")
             display("Deserialise error: {}", err)
             cause(err)
@@ -47,7 +45,9 @@ quick_error! {
 pub fn serialise<T>(data: &T) -> Result<Vec<u8>, SerialisationError>
     where T: Encodable
 {
-    encode(data, SizeLimit::Infinite).map_err(From::from)
+    let mut buffer = Vec::new();
+    try!(serialise_into(data, &mut buffer));
+    Ok(buffer)
 }
 
 /// Deserialise a Decodable type
@@ -62,12 +62,14 @@ pub fn deserialise<T>(data: &[u8]) -> Result<T, SerialisationError>
 pub fn serialise_into<T: Encodable, W: Write>(data: &T,
                                               write: &mut W)
                                               -> Result<(), SerialisationError> {
-    encode_into(data, write, SizeLimit::Bounded(1 << 21)).map_err(From::from)
+    let mut encoder = Encoder::new(write);
+    Ok(try!(data.encode(&mut encoder)))
 }
 
 /// Deserialise a Decodable type directly from a Read
 pub fn deserialise_from<R: Read, T: Decodable>(read: &mut R) -> Result<T, SerialisationError> {
-    decode_from(read, SizeLimit::Bounded(1 << 21)).map_err(From::from)
+    let mut decoder = Decoder::new(read);
+    Ok(try!(Decodable::decode(&mut decoder)))
 }
 
 #[cfg(test)]
