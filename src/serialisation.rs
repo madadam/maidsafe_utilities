@@ -87,4 +87,12 @@ mod test {
             unwrap_result!(deserialise(&serialised_data));
         assert_eq!(original_data, deserialised_data);
     }
+
+    #[test]
+    #[should_panic]
+    fn resilience_to_malicious_input() {
+        // https://github.com/msgpack/msgpack/blob/master/spec.md#formats-array
+        let malicious_buffer = [0xdd, 0xff, 0xff, 0xff, 0xff, 0xc2];
+        let _ = unwrap_result!(deserialise::<Vec<bool>>(&malicious_buffer));
+    }
 }
